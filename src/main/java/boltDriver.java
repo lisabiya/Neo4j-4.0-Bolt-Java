@@ -12,11 +12,11 @@ public class boltDriver {
             "pa+=p{.contributive_initiator,.paid_contributive_date,.contributive_id,.subcribe_contributive_way\n" +
             " ,.date_posted,.subcribe_contributive_date,.paid_contributive_limit,.key_id,.OriginType,.OriginID},\n" +
             "pa.created = timestamp()\n" +
-            "MERGE(company:Company{company_md5:com.company_md5})\n" +
+            "MERGE(company:Company{company:com.company})\n" +
             "ON CREATE SET \n" +
             "company+=com{.*},company.created = timestamp()\n" +
             "MERGE(pa)-[r:SHAREHOLDING]-(company)\n" +
-            "ON CREATE SET r=rel{.*},r.desc=\"¿Ø¹É\"";
+            "ON CREATE SET r=rel{.*},r.desc=\"æŽ§è‚¡\"";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(boltDriver.class);
 
@@ -31,19 +31,15 @@ public class boltDriver {
 
         try (Session session = driver.session()) {
 
-            for (int i = 0; i < 10000; i++) {
-                String sessionQuery = query.replace("$skip", i * 1000 + "");
-                sessionQuery = sessionQuery.replace("$limit", "1000");
+            for (int i = 1061; i < 10000; i++) {
+                String sessionQuery = query.replace("$skip", i * 10000 + "");
+                sessionQuery = sessionQuery.replace("$limit", "10000");
                 ResultSummary result = session.run(sessionQuery).consume();
                 LOGGER.debug("***************|" + i + "|**************************************");
                 LOGGER.debug("***return: " + result.counters().nodesCreated());
                 LOGGER.debug("*****************************************************");
+
             }
-//            session.run("MATCH (n:Partner) RETURN n limit 10").stream()
-//                    .map(record -> record.get("n"))
-//                    .forEach(value -> {
-//                        LOGGER.debug(value.asMap().toString());
-//                    });
         }
         driver.close();
     }

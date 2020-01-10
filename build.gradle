@@ -1,10 +1,16 @@
-plugins {
-    id 'java'
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.1.RELEASE")
+    }
 }
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
 
 group 'debby'
 version '1.0'
-
 
 repositories {
     mavenCentral()
@@ -15,4 +21,8 @@ dependencies {
     compile 'org.neo4j.driver:neo4j-java-driver-spring-boot-starter:4.0.0'
     compile 'org.springframework.boot:spring-boot-starter-web:2.2.1.RELEASE'
     compile 'com.alibaba:fastjson:1.2.61'
+
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+//    // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-kotlin
+//    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.10.0'
 }

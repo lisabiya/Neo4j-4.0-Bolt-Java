@@ -25,7 +25,8 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -34,22 +35,46 @@ import java.util.Map;
 @RestController
 public class MoviesController {
 
-//    private final Driver driver;
-//
-//    public MoviesController(Driver driver) {
-//        this.driver = driver;
-//    }
-//
-//    @GetMapping(path = "/movies", produces = MediaType.APPLICATION_JSON_VALUE)
-//    public List<JSONObject> getMovieTitles() {
-////        Logger.getLogger("boltDriver").log(Level.INFO, "***return: " + title);
-//
-//        try (Session session = driver.session(SessionConfig.builder().withDefaultAccessMode(AccessMode.WRITE).build())) {
-//            return session.run("MATCH (n:Partner) RETURN n LIMIT 20")
-//                    .list(r -> {
-//                        Map s = r.get("n").asNode().asMap();
-//                        return (JSONObject) JSON.toJSON(s);
-//                    });
-//        }
-//    }
+    private final static String getHolderRel = "MATCH (pa:Partner{contributive_initiator:$name})-[:SHAREHOLDING]-(com:Company{company:$company})\n" +
+            "MATCH p=(pa)-[*..4]-() \n" +
+            "WHERE ALL (r IN relationships(p) WHERE type(r) in ['SHAREHOLDING'])\n" +
+            "with p,nodes(p) as nodes,relationships(p) as relationships\n" +
+            "unwind nodes as node\n" +
+            "with p,relationships,collect({name:coalesce(node.company, node.contributive_initiator),id:coalesce(node.company_md5, node.key_id),type:labels(node)[0]}) as nodes\n" +
+            "unwind relationships as r\n" +
+            "with p,nodes,case type(r) when 'SHAREHOLDING2' then \"控股\" when \"SUB_COMPANY\" then \"子公司\" ELSE '其他' END AS result\n" +
+            "with p,nodes,collect({type:result}) as relationships\n" +
+            "RETURN {nodes:nodes,relationships:relationships}  as path";
+
+
+    private final Driver driver;
+
+    public MoviesController(Driver driver) {
+        this.driver = driver;
+    }
+
+    @RequestMapping(path = "/movies", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<JSONObject> getMovieTitles() {
+
+        try (Session session = driver.session(SessionConfig.builder().withDefaultAccessMode(AccessMode.WRITE).build())) {
+            return session.run("MATCH (n:Partner) RETURN n LIMIT 20")
+                    .list(r -> {
+                        Map s = r.get("n").asNode().asMap();
+                        return (JSONObject) JSON.toJSON(s);
+                    });
+        }
+    }
+
+    @RequestMapping(path = "/getHolderRel", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<JSONObject> getHolderRel(@RequestParam String name, @RequestParam String company) {
+
+        try (Session session = driver.session(SessionConfig.builder().withDefaultAccessMode(AccessMode.WRITE).build())) {
+            return session.run(getHolderRel, Map.of("name", name, "company", company))
+                    .list(r -> {
+                        Map s = r.get("path").asMap();
+                        return (JSONObject) JSON.toJSON(s);
+                    });
+        }
+    }
+
 }
